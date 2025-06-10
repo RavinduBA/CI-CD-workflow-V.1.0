@@ -1,0 +1,42 @@
+# This is a GitHub Actions CD (Continuous Deployment) workflow that automatically deploys your Node.js application when code is pushed to the main branch.
+
+# Warning 
+
+# In current CI/CD workgflow only works well if the scenario is like this ,
+# sent a PR and  wait and see results of test and if its okay then  merge it to main brnach then only deploy.yml , then only first CI and CD works well
+
+
+name: Deploy Project  # Name of the GitHub Actions workflow
+
+on:
+  push:              # Triggered when code is pushed to the main branch
+    branches:
+      - main         # Only runs for pushes to the main branch
+
+jobs:
+  deploy:           # Define a job called deploy , the job runs on an Ubuntu Linux virtual machine
+    runs-on: ubuntu-latest  
+    container:
+      image: node:20  # Use a Docker container with Node.js v20
+
+    steps:
+      - uses: actions/checkout@v3  # Step 1: Check out the repo code so the workflow can access it
+        with:
+          node-version: 20  # (Note: 'node-version' here is not used by checkout, can be removed or used with setup-node instead)
+
+      - run: npm ci  # Step 3: Install exact dependencies as per package-lock.json (clean install)
+
+      - run: npm run build  # Step 4: Run the build script to compile or bundle the app
+
+      - name: Get SSH Key and set permissons # Step 5 
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+      - name: Deploy to SCP  # Uses scp and ssh to deploy the built code to a remote server via SSH.
+        run: |
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -r ./dist/* ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/node-app
+      - name: Restart Server # Uses ssh to connect to the remote server and restart the Node.js application using PM2.
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "pm2 restart node-app || pm2 start dist/server.js --name node-app"
+       
+
