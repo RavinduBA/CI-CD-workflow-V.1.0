@@ -1,5 +1,6 @@
 
-# This defines a CI (Continuous Integration) workflow named "Test Project" that runs automatically whenever a pull request is made to the main branch.
+# This defines a CI (Continuous Integration) workflow named "Test Project" 
+# This runs automatically whenever a pull request is made to the main branch.
 
 name: Test Project  # Name of the GitHub Actions workflow
 
