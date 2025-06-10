@@ -1,0 +1,26 @@
+
+# This defines a CI (Continuous Integration) workflow named "Test Project" that runs automatically whenever a pull request is made to the main branch.
+
+name: Test Project  # Name of the GitHub Actions workflow
+
+on:
+  pull_request:     # Triggered only when someone opens or updates a pull request targeting the main branch.
+    branches:
+      - main        
+
+jobs:
+  test:             # Define a job called 'test'
+    runs-on: ubuntu-latest     # The job runs on an Ubuntu Linux virtual machine inside a Docker container with Node.js v20,
+
+    container:
+      image: node:20        
+    steps:
+      - uses: actions/checkout@v3  # Step 1: Check out the repo code so the workflow can access it
+        with:
+          node-version: 20         # (Note: 'node-version' here is not used by checkout, can be removed or used with setup-node instead)
+
+      - run: npm ci                # Step 2: Install exact dependencies as per package-lock.json (clean install)
+
+      - run: npm test              # Step 3: Run the test script (defined in your package.json)
+
+      - run: npm run build         # Step 4: Run the build script to compile or bundle the app
